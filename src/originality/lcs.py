@@ -1,25 +1,19 @@
 import ctypes
 import numpy as np
 from typing import Tuple, List, Dict, Optional
-from transformers import AutoTokenizer
 
 def check_originality(targets,
                       references,
-                      return_max = True,
-                      tokenizer : Optional[AutoTokenizer] = None,
-                      **kwargs) -> np.ndrarray:
-    
-    if tokenizer != None:
-        a = 0
-    else:
-        # Check if references is tokenized
-        references_tokenized = references
-    
+                      return_max = True) -> np.ndrarray:
+
+  
     if return_max:
         lcs = np.zeros((len(targets), len(references)))
     else:
         lcs = np.zeros(len(targets))
-    
+
+    references_tokenized = references  
+
     # Check the OS type
 
     # Load the CUDA C++ shared library

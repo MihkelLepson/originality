@@ -4,14 +4,14 @@ from typing import Tuple, List, Dict, Optional
 
 def check_originality(targets,
                       references,
-                      return_max = True) -> np.ndrarray:
+                      return_max = True) -> np.ndarray:
 
-  
+    
     if return_max:
         lcs = np.zeros((len(targets), len(references)))
     else:
         lcs = np.zeros(len(targets))
-
+    """
     references_tokenized = references  
 
     # Check the OS type
@@ -33,5 +33,6 @@ def check_originality(targets,
     size_org = targets.shape[0]
     size_gen = references.shape[0]
     size_div = divide_points.shape[0]
+    """
 
     return lcs

@@ -1,20 +1,20 @@
-import filecmp
-import glob
-import importlib
-import json
-import os
-import shutil
-import subprocess
-import sysconfig
-import time
-import sys
-from collections import defaultdict
+#import filecmp
+#import glob
+#import importlib
+#import json
+#import os
+#import shutil
+#import subprocess
+#import sysconfig
+#import time
+#import sys
+#from collections import defaultdict
 
-import setuptools.command.build_ext
-import setuptools.command.install
+#import setuptools.command.build_ext
+#import setuptools.command.install
 import setuptools.command.sdist
 from setuptools import Extension, find_packages, setup
-from setuptools.dist import Distribution
+#from setuptools.dist import Distribution
 
 
 #cwd = os.path.dirname(os.path.abspath(__file__))
@@ -33,8 +33,13 @@ def main():
         ),
         long_description='long_description',
         long_description_content_type="text/markdown",
-        package_data={
-        },
+        packages=find_packages(
+            include=['originality'],
+            exclude=['cuda_code']),
+        install_requires=[
+            'numpy >= 1.20.0'
+        ],
+        include_package_data= True,
         url="https://github.com/MihkelLepson/originality",
         download_url="https://github.com/MihkelLepson/originality",
         author="Mihkel Lepson",

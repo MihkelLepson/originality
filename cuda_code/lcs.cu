@@ -32,7 +32,15 @@ __global__ void lcsKernel(const int* targets, int* referneces, int* lcs, const i
 
 extern "C" {
 // Entry point function to be called from Python
-void cudaLcs(int* targets, int* referneces, int* lcs, int*divide_points_ref, int size_gen, int size_ref, int size_div_ref) {
+void cudaLcs(int* targets,
+             int* referneces,
+             int* lcs,
+             int* divide_points_tar,
+             int* divide_points_ref,
+             int size_ref,
+             int size_div_tar,
+             int size_div_ref) {
+    
     int* d_targets;
     int* d_referneces;
     int* d_lcs;
@@ -40,12 +48,11 @@ void cudaLcs(int* targets, int* referneces, int* lcs, int*divide_points_ref, int
     int* d_L;
 
     // Allocate device memory
-    cudaMalloc((void**)&d_targets, sizeof(int) * size_gen);
     cudaMalloc((void**)&d_referneces, sizeof(int) * size_ref);
     cudaMalloc((void**)&d_lcs, sizeof(int) * (size_div_ref-1));
     cudaMalloc((void**)&d_divide_points, sizeof(int) * size_div_ref); // We need one extra element for the last index
     // TODO, calcualte the maximum allowed size and if needed divide computation.
-    // LCS needs (m+1)*(n+1) sized matrix. We have size_div-1 referneces, so we add size_div-1
+    // LCS needs (m+1)*(n+1) sized matrix. We have size_div_ref-1 referneces, so we add size_div_ref-1
     cudaError_t cudaStatus = cudaMalloc((void**)&d_L, sizeof(int) * (size_gen + 1)*(size_ref+size_div_ref-1));
     //cudaStatus = cudaMemset(d_L, 0, sizeof(int) * (size_gen + 1)*(size_ref+size_div-1));
     if (cudaStatus != cudaSuccess) {
@@ -53,31 +60,59 @@ void cudaLcs(int* targets, int* referneces, int* lcs, int*divide_points_ref, int
         printf("CUDA error: %s\n", cudaGetErrorString(cudaStatus));
     }
     // Copy input data from host to device
-    cudaMemcpy(d_targets, targets, sizeof(int) * size_gen, cudaMemcpyHostToDevice);
     cudaMemcpy(d_referneces, referneces, sizeof(int) * size_ref, cudaMemcpyHostToDevice);
     cudaMemcpy(d_divide_points, divide_points_ref, sizeof(int) * size_div_ref, cudaMemcpyHostToDevice); // Copy divide_points with an extra element
 
-    // Launch kernel
+    // Define the kernel parameters
     int block_size = 256;
     int grid_size = (size_div_ref + block_size - 1) / block_size;
-    lcsKernel<<<grid_size, block_size>>>(d_targets, d_referneces, d_lcs, d_divide_points, d_L, size_gen, size_div_ref, size_ref+size_div_ref-1);
-    cudaDeviceSynchronize();
 
-    cudaError_t err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        printf("CUDA error: %s\n", cudaGetErrorString(err));
-    } else {
-        printf("CUDA success\n");
+    int size_tar;
+    int max_lcs;
+    int* lcs_kernel_results = (int*) malloc(sizeof(int)*size_div_ref-1);
+    // We process single target text at a time.
+    for(int i = 0; i < size_div_tar-1; i++) {
+        size_tar = divide_points_tar[i+1]-divide_points_tar[i];
+
+        // Allocate the memory for target text.
+        cudaMalloc((void**)&d_targets, sizeof(int) * size_tar);
+        cudaMemcpy(d_targets, targets, sizeof(int) * size_gen, cudaMemcpyHostToDevice);
+        // Allocate the memory for dynamic programming matrix. The matrix can have more then 2**15 cells which
+        // is more than the local's memory size (depends on the GPU). Hence we use the slower global memory.
+        cudaError_t cudaStatus = cudaMalloc((void**)&d_L, sizeof(int) * (size_tar + 1)*(size_ref+size_div_ref-1));
+        if (cudaStatus != cudaSuccess) {
+            printf("CUDA error: %s\n", cudaGetErrorString(cudaStatus));
+        }
+
+        // Calculate the LCS with each reference text
+        lcsKernel<<<grid_size, block_size>>>(d_targets, d_referneces, d_lcs, d_divide_points, d_L, size_tar, size_div_ref, size_ref+size_div_ref-1);
+        cudaDeviceSynchronize();
+        // Check if errors occured in kernel function.
+        cudaError_t err = cudaGetLastError();
+        if (err != cudaSuccess) {
+            printf("CUDA error: %s\n", cudaGetErrorString(err));
+
+        // Get the results
+        cudaMemcpy(lcs_kernel_results, d_lcs, sizeof(int) * (size_div_ref-1), cudaMemcpyDeviceToHost)
+
+        // Find the highest lcs
+        for(int j = 0; j < size_div_ref-1; j++) {
+            if(lcs_kernel_results[j] > max)
+                max == lcs_kernel_results[j];
+        }
+        lcs[i] = max;
+        max = 0;
+
+        // Free the device memory
+        cudaFree(d_targets);
+        cudaFree(d_L);
     }
 
-    // Copy result data from device to host
-    cudaMemcpy(lcs, d_lcs, sizeof(int) * (size_div_ref-1), cudaMemcpyDeviceToHost);
+    free(lcs_kernel_results);
     
     // Free device memory
-    cudaFree(d_targets);
     cudaFree(d_referneces);
     cudaFree(d_lcs);
     cudaFree(d_divide_points);
-    cudaFree(d_L);
 }
 }

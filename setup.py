@@ -15,6 +15,8 @@
 import setuptools.command.sdist
 from setuptools import Extension, find_packages, setup
 #from setuptools.dist import Distribution
+from setuptools.command.build_ext import build_ext
+#from cmake_setuptools import CMakeExtension, CMakeBuildExt
 
 
 #cwd = os.path.dirname(os.path.abspath(__file__))

@@ -73,7 +73,6 @@ void cudaLcs(int* targets,
         // Handle error
         printf("CUDA error: %s\n", cudaGetErrorString(cudaStatus));
     }
-    printf("Here1\n");
     // Copy input data from host to device
     cudaMemcpy(d_referneces, referneces, sizeof(int) * size_ref, cudaMemcpyHostToDevice);
     cudaMemcpy(d_divide_points, divide_points_ref, sizeof(int) * size_div_ref, cudaMemcpyHostToDevice); // Copy divide_points with an extra element
@@ -86,9 +85,6 @@ void cudaLcs(int* targets,
     // We process single target text at a time.
     for(int i = 0; i < size_div_tar-1; i++) {
         size_tar = divide_points_tar[i+1]-divide_points_tar[i];
-        for(int k = 0; k < size_tar; k++) {
-            printf("%i\n", targets[divide_points_tar[i]+k]);
-        }
         // Allocate the memory for target text.
         cudaMalloc((void**)&d_targets, sizeof(int) * size_tar);
         cudaMemcpy(d_targets, &targets[divide_points_tar[i]], sizeof(int) * size_tar, cudaMemcpyHostToDevice);
@@ -106,7 +102,7 @@ void cudaLcs(int* targets,
             printf("CUDA error: %s\n", cudaGetErrorString(err));
         }
         // Get the results
-        cudaMemcpy(&lcs[i*(size_div_tar-1)], d_lcs, sizeof(int) * (size_div_ref-1), cudaMemcpyDeviceToHost);
+        cudaMemcpy(&lcs[i*(size_div_ref-1)], d_lcs, sizeof(int) * (size_div_ref-1), cudaMemcpyDeviceToHost);
 
         cudaFree(d_targets);
         cudaFree(d_L);

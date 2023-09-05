@@ -17,11 +17,11 @@ def check_originality(targets: List[List[int]],
                       references: List[List[int]],
                       return_max: Optional[bool] = False) -> np.ndarray:
     
-    if return_max:
-        lcs = np.empty(len(targets), dtype=np.int32)
-    else:
-        lcs = np.empty(len(targets)*len(references), dtype=np.int32)
-    #lcs = np.empty(len(references), dtype=np.int32)
+    #if return_max:
+    #    lcs = np.empty(len(targets), dtype=np.int32)
+    #else:
+    #    lcs = np.empty(len(targets)*len(references), dtype=np.int32)
+    lcs = np.empty(len(targets)*len(references), dtype=np.int32)
     
     # Check the OS type
     cuda_module_path = os.path.join(os.path.dirname(__file__), '..', 'cuda_code', 'cuda_lcs_module.so')  
@@ -59,5 +59,7 @@ def check_originality(targets: List[List[int]],
                         ctypes.c_int(size_ref),
                         ctypes.c_int(size_div_tar),
                         ctypes.c_int(size_div_ref))
+
+    lcs = lcs.reshape((len(targets),len(references)))
 
     return lcs

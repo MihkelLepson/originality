@@ -3,11 +3,11 @@ from setuptools import find_packages, setup
 def main():
     setup(
         name='originality',
-        version='0.0.1',
+        version='0.0.3',
         description=(
             'Calculating text originality in Python'
         ),
-        long_description='long_description',
+        long_description='Check https://github.com/MihkelLepson/originality/tree/main for more information.',
         long_description_content_type="text/markdown",
         packages=find_packages(
             include=['originality'],

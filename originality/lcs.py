@@ -4,9 +4,18 @@ from typing import Tuple, List, Dict, Optional
 import os
 import itertools
 
-def check_originality(targets,
-                      references,
-                      return_max: Optional[bool] = True) -> np.ndarray:
+def get_divide_points(input: List[List[int]]) -> np.ndarray:
+    divide_points = np.zeros(len(input)+1, dtype=np.int32)
+    sum = 0
+    for i, ref in enumerate(input):
+        sum += len(ref)
+        divide_points[i+1] = sum
+    
+    return divide_points
+
+def check_originality(targets: List[List[int]],
+                      references: List[List[int]],
+                      return_max: Optional[bool] = False) -> np.ndarray:
     
     if return_max:
         lcs = np.zeros(len(targets))
@@ -26,32 +35,32 @@ def check_originality(targets,
                                     ctypes.POINTER(ctypes.c_int),
                                     ctypes.POINTER(ctypes.c_int),
                                     ctypes.POINTER(ctypes.c_int),
+                                    ctypes.POINTER(ctypes.c_int),
+                                    ctypes.c_int,
                                     ctypes.c_int,
                                     ctypes.c_int,
                                     ctypes.c_int]
     
     references_array = np.array(list(itertools.chain.from_iterable(references)), dtype=np.int32)
-    print("This is references_array")
-    print(references_array)
-    divide_points = np.zeros(len(references)+1, dtype=np.int32)
-
-    sum = 0
-    for i, reference in enumerate(references):
-        sum += len(reference)
-        divide_points[i+1] = sum
-    print("These are divide_points")
-    print(divide_points)
+    targets_array = np.array(list(itertools.chain.from_iterable(targets)), dtype=np.int32)
+    
+    divide_points_ref = get_divide_points(references)
+    divide_points_tar = get_divide_points(targets)
+    
     size_org = targets.shape[0]
-    size_gen = references_array.shape[0]
-    size_div = divide_points.shape[0]
+    size_ref = references_array.shape[0]
+    size_div_ref = divide_points_ref.shape[0]
+    size_div_tar = divide_points_tar.shape[0]
 
     # Call the CUDA C++ function
-    cuda_module.cudaLcs(targets.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+    cuda_module.cudaLcs(targets_array.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
                         references_array.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
                         lcs.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
-                        divide_points.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+                        divide_points_tar.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+                        divide_points_ref.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
                         ctypes.c_int(size_org),
-                        ctypes.c_int(size_gen),
-                        ctypes.c_int(size_div))
+                        ctypes.c_int(size_ref),
+                        ctypes.c_int(size_div_tar),
+                        ctypes.c_int(size_div_ref))
 
     return lcs

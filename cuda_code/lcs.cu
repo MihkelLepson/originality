@@ -53,7 +53,7 @@ void cudaLcs(int* targets,
     cudaMalloc((void**)&d_divide_points, sizeof(int) * size_div_ref); // We need one extra element for the last index
     // TODO, calcualte the maximum allowed size and if needed divide computation.
     // LCS needs (m+1)*(n+1) sized matrix. We have size_div_ref-1 referneces, so we add size_div_ref-1
-    cudaError_t cudaStatus = cudaMalloc((void**)&d_L, sizeof(int) * (size_gen + 1)*(size_ref+size_div_ref-1));
+    cudaError_t cudaStatus = cudaMalloc((void**)&d_L, sizeof(int) * (size_ref + 1)*(size_ref+size_div_ref-1));
     //cudaStatus = cudaMemset(d_L, 0, sizeof(int) * (size_gen + 1)*(size_ref+size_div-1));
     if (cudaStatus != cudaSuccess) {
         // Handle error
@@ -76,7 +76,7 @@ void cudaLcs(int* targets,
 
         // Allocate the memory for target text.
         cudaMalloc((void**)&d_targets, sizeof(int) * size_tar);
-        cudaMemcpy(d_targets, targets, sizeof(int) * size_gen, cudaMemcpyHostToDevice);
+        cudaMemcpy(d_targets, targets, sizeof(int) * size_ref, cudaMemcpyHostToDevice);
         // Allocate the memory for dynamic programming matrix. The matrix can have more then 2**15 cells which
         // is more than the local's memory size (depends on the GPU). Hence we use the slower global memory.
         cudaError_t cudaStatus = cudaMalloc((void**)&d_L, sizeof(int) * (size_tar + 1)*(size_ref+size_div_ref-1));
@@ -91,17 +91,17 @@ void cudaLcs(int* targets,
         cudaError_t err = cudaGetLastError();
         if (err != cudaSuccess) {
             printf("CUDA error: %s\n", cudaGetErrorString(err));
-
+        }
         // Get the results
-        cudaMemcpy(lcs_kernel_results, d_lcs, sizeof(int) * (size_div_ref-1), cudaMemcpyDeviceToHost)
+        cudaMemcpy(lcs_kernel_results, d_lcs, sizeof(int) * (size_div_ref-1), cudaMemcpyDeviceToHost);
 
         // Find the highest lcs
         for(int j = 0; j < size_div_ref-1; j++) {
-            if(lcs_kernel_results[j] > max)
-                max == lcs_kernel_results[j];
+            if(lcs_kernel_results[j] > max_lcs)
+                max_lcs = lcs_kernel_results[j];
         }
-        lcs[i] = max;
-        max = 0;
+        lcs[i] = max_lcs;
+        max_lcs = 0;
 
         // Free the device memory
         cudaFree(d_targets);

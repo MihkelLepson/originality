@@ -18,9 +18,9 @@ def check_originality(targets: List[List[int]],
                       return_max: Optional[bool] = False) -> np.ndarray:
     
     if return_max:
-        lcs = np.zeros(len(targets))
+        lcs = np.empty(len(targets), dtype=np.int32)
     else:
-        lcs = np.zeros((len(targets), len(references)))
+        lcs = np.empty(len(targets)*len(references), dtype=np.int32)
     #lcs = np.empty(len(references), dtype=np.int32)
     
     # Check the OS type
@@ -38,7 +38,6 @@ def check_originality(targets: List[List[int]],
                                     ctypes.POINTER(ctypes.c_int),
                                     ctypes.c_int,
                                     ctypes.c_int,
-                                    ctypes.c_int,
                                     ctypes.c_int]
     
     references_array = np.array(list(itertools.chain.from_iterable(references)), dtype=np.int32)
@@ -47,7 +46,6 @@ def check_originality(targets: List[List[int]],
     divide_points_ref = get_divide_points(references)
     divide_points_tar = get_divide_points(targets)
     
-    size_org = targets.shape[0]
     size_ref = references_array.shape[0]
     size_div_ref = divide_points_ref.shape[0]
     size_div_tar = divide_points_tar.shape[0]
@@ -58,7 +56,6 @@ def check_originality(targets: List[List[int]],
                         lcs.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
                         divide_points_tar.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
                         divide_points_ref.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
-                        ctypes.c_int(size_org),
                         ctypes.c_int(size_ref),
                         ctypes.c_int(size_div_tar),
                         ctypes.c_int(size_div_ref))

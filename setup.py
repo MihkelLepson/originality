@@ -1,32 +1,6 @@
-#import filecmp
-#import glob
-#import importlib
-#import json
-#import os
-#import shutil
-#import subprocess
-#import sysconfig
-#import time
-#import sys
-#from collections import defaultdict
-
-#import setuptools.command.build_ext
-#import setuptools.command.install
-import setuptools.command.sdist
-from setuptools import Extension, find_packages, setup
-#from setuptools.dist import Distribution
-from setuptools.command.build_ext import build_ext
-#from cmake_setuptools import CMakeExtension, CMakeBuildExt
-
-
-#cwd = os.path.dirname(os.path.abspath(__file__))
+from setuptools import find_packages, setup
 
 def main():
-
-    #with open(os.path.join(cwd, "README.md"), encoding="utf-8") as f:
-    #    long_description = f.read()
-    
-    # the list of runtime dependencies required by this built package
     setup(
         name='originality',
         version='0.0.1',

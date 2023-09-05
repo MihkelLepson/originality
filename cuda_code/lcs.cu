@@ -83,7 +83,6 @@ void cudaLcs(int* targets,
     int grid_size = (size_div_ref + block_size - 1) / block_size;
 
     int size_tar;
-    int* lcs_kernel_results = (int*) malloc(sizeof(int)*size_div_ref-1);
     // We process single target text at a time.
     for(int i = 0; i < size_div_tar-1; i++) {
         size_tar = divide_points_tar[i+1]-divide_points_tar[i];
@@ -109,19 +108,9 @@ void cudaLcs(int* targets,
         // Get the results
         cudaMemcpy(&lcs[i*(size_div_tar-1)], d_lcs, sizeof(int) * (size_div_ref-1), cudaMemcpyDeviceToHost);
 
-        /*
-        printf("Here are results \n");
-        // Find the highest lcs
-        for(int j = 0; j < size_div_ref-1; j++) {
-            printf("%i\n",lcs_kernel_results[j]);
-        }
-        memcpy(&lcs[i*(size_div_tar-1)], lcs_kernel_results, sizeof(int) * (size_div_ref-1));
-        // Free the device memory
-        */
         cudaFree(d_targets);
         cudaFree(d_L);
     }
-    free(lcs_kernel_results);
     
     // Free device memory
     cudaFree(d_referneces);

@@ -38,7 +38,8 @@ def check_originality(targets: List[List[int]],
                                     ctypes.POINTER(ctypes.c_int),
                                     ctypes.c_int,
                                     ctypes.c_int,
-                                    ctypes.c_int]
+                                    ctypes.c_int,
+                                    ctypes.c_bool]
     
     references_array = np.array(list(itertools.chain.from_iterable(references)), dtype=np.int32)
     targets_array = np.array(list(itertools.chain.from_iterable(targets)), dtype=np.int32)
@@ -58,7 +59,8 @@ def check_originality(targets: List[List[int]],
                         divide_points_ref.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
                         ctypes.c_int(size_ref),
                         ctypes.c_int(size_div_tar),
-                        ctypes.c_int(size_div_ref))
+                        ctypes.c_int(size_div_ref),
+                        False)
 
     lcs = lcs.reshape((len(targets),len(references)))
 

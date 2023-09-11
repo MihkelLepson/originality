@@ -53,7 +53,8 @@ void cudaLcs(int* targets,
              int* divide_points_ref,
              int size_ref,
              int size_div_tar,
-             int size_div_ref) {
+             int size_div_ref
+             bool return_max) {
     
     int* d_targets;
     int* d_referneces;
@@ -101,8 +102,13 @@ void cudaLcs(int* targets,
         if (err != cudaSuccess) {
             printf("CUDA error: %s\n", cudaGetErrorString(err));
         }
-        // Get the results
-        cudaMemcpy(&lcs[i*(size_div_ref-1)], d_lcs, sizeof(int) * (size_div_ref-1), cudaMemcpyDeviceToHost);
+        // Get results
+        // TODO
+        if (return_max) {
+            cudaMemcpy(&lcs[i*(size_div_ref-1)], d_lcs, sizeof(int) * (size_div_ref-1), cudaMemcpyDeviceToHost);
+        } else {
+            cudaMemcpy(&lcs[i*(size_div_ref-1)], d_lcs, sizeof(int) * (size_div_ref-1), cudaMemcpyDeviceToHost);
+        }
 
         cudaFree(d_targets);
         cudaFree(d_L);

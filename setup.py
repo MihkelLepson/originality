@@ -3,14 +3,15 @@ from setuptools import find_packages, setup
 def main():
     setup(
         name='originality',
-        version='0.0.4',
+        version='0.0.5',
         description=(
             'Calculating text originality in Python'
         ),
         long_description='Check https://github.com/MihkelLepson/originality/tree/main for more information.',
         long_description_content_type="text/markdown",
         packages=find_packages(
-            include=['originality', 'cuda_code']),
+            include=['originality'],
+            exclude=['cuda_code']),
         install_requires=[
             'numpy >= 1.20.0'
         ],

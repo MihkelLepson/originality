@@ -24,7 +24,7 @@ def check_originality(targets: List[List[int]],
     lcs = np.empty(len(targets)*len(references), dtype=np.int32)
     
     # Check the OS type
-    cuda_module_path = os.path.join(os.path.dirname(__file__), '..', 'cuda_code', 'cuda_lcs_module.so')  
+    cuda_module_path = os.path.join(os.path.dirname(__file__), 'cuda_lcs_module.so')  
 
     # Load the CUDA C++ shared library
     cuda_module = ctypes.CDLL(cuda_module_path)

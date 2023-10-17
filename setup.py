@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 def main():
     setup(
         name='originality',
-        version='0.0.5',
+        version='0.0.6',
         description=(
             'Calculating text originality in Python'
         ),
@@ -15,6 +15,7 @@ def main():
         install_requires=[
             'numpy >= 1.20.0'
         ],
+        package_data={'': ['cuda_lcs_module.so']},
         include_package_data= True,
         url="https://github.com/MihkelLepson/originality",
         download_url="https://github.com/MihkelLepson/originality",

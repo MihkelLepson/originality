@@ -53,8 +53,7 @@ void cudaLcs(int* targets,
              int* divide_points_ref,
              int size_ref,
              int size_div_tar,
-             int size_div_ref
-             bool return_max) {
+             int size_div_ref) {
     
     int* d_targets;
     int* d_referneces;
@@ -66,14 +65,7 @@ void cudaLcs(int* targets,
     cudaMalloc((void**)&d_referneces, sizeof(int) * size_ref);
     cudaMalloc((void**)&d_lcs, sizeof(int) * (size_div_ref-1));
     cudaMalloc((void**)&d_divide_points, sizeof(int) * size_div_ref); // We need one extra element for the last index
-    // TODO, calcualte the maximum allowed size and if needed divide computation.
-    // LCS needs (m+1)*(n+1) sized matrix. We have size_div_ref-1 referneces, so we add size_div_ref-1
-    cudaError_t cudaStatus = cudaMalloc((void**)&d_L, sizeof(int) * (size_ref + 1)*(size_ref+size_div_ref-1));
-    //cudaStatus = cudaMemset(d_L, 0, sizeof(int) * (size_gen + 1)*(size_ref+size_div-1));
-    if (cudaStatus != cudaSuccess) {
-        // Handle error
-        printf("CUDA error: %s\n", cudaGetErrorString(cudaStatus));
-    }
+
     // Copy input data from host to device
     cudaMemcpy(d_referneces, referneces, sizeof(int) * size_ref, cudaMemcpyHostToDevice);
     cudaMemcpy(d_divide_points, divide_points_ref, sizeof(int) * size_div_ref, cudaMemcpyHostToDevice); // Copy divide_points with an extra element
@@ -103,12 +95,7 @@ void cudaLcs(int* targets,
             printf("CUDA error: %s\n", cudaGetErrorString(err));
         }
         // Get results
-        // TODO
-        if (return_max) {
-            cudaMemcpy(&lcs[i*(size_div_ref-1)], d_lcs, sizeof(int) * (size_div_ref-1), cudaMemcpyDeviceToHost);
-        } else {
-            cudaMemcpy(&lcs[i*(size_div_ref-1)], d_lcs, sizeof(int) * (size_div_ref-1), cudaMemcpyDeviceToHost);
-        }
+        cudaMemcpy(&lcs[i*(size_div_ref-1)], d_lcs, sizeof(int) * (size_div_ref-1), cudaMemcpyDeviceToHost);
 
         cudaFree(d_targets);
         cudaFree(d_L);

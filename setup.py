@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 def main():
     setup(
         name='originality',
-        version='0.0.6',
+        version='0.0.7',
         description=(
             'Calculating text originality in Python'
         ),

@@ -10,8 +10,5 @@ from originality import lcs
 targets = [[1,2,3],[20,30,40,50]]
 references = [[1, 20, 30],[40,50,4,6,1],[23,5,1,2,5,2,5,1,3]]
 
-print(lcs.check_originality(targets, references))
-
-[[1 1 3]
- [2 2 0]]
+lcs.check_originality(targets, references)
 ```

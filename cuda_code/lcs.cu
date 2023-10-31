@@ -1,15 +1,15 @@
 #include <stdio.h>
 #include <cuda_runtime.h>
 
-
-__device__ int CalcLcs(const int* target,
+__device__ float CalcLcs(const int* target,
                        const int m,
                        const int* reference,
                        const int n,
                        int* L,
                        const int tid,
                        const int start_idx,
-                       const int lengthL) {
+                       const int lengthL,
+                       const int max_distance) {
     int offset = start_idx+tid;
     for (int i = 0; i <= m; i++) {
         for (int j = 0; j <= n; j++) {
@@ -21,13 +21,50 @@ __device__ int CalcLcs(const int* target,
                 L[i*lengthL + j+offset] = max(L[(i-1)*lengthL + j+offset], L[i*lengthL + j-1+offset]);
         }
     }
-    return L[m*lengthL + n+offset];
+    int len = L[m*lengthL + n+offset];
+    if (len <= 1) {
+        return (float)len;
+    }
+    // Find the distances between members of LCS.
+    // In locations1 we store the locations in the reference text and in locations2 we store the locations in the target text
+    int locations1[512];
+    int locations2[512];
+
+    int row = m;
+    int col = n;
+    int val = len;
+
+    while (val > 0) {
+        if ((col > 1) && (L[row*lengthL + (col-1)+offset] == val)) {
+            col -= 1;
+        } else if ((row > 1) && (L[(row-1)*lengthL + col + offset] == val)) {
+            row -= 1;
+        } else {
+            locations1[val-1] = col;
+            locations2[val-1] = row;
+            val -= 1;
+        }
+    }
+    // The lcs without taking into account distances between members is atleast 2. (We returned if was <= 1).
+    // We add the rest of the members but we modify their value based on the distance.
+    float lcs = 1.0;
+    for (int k = 0; k < len-1; k++) {
+        // We take the maximum distance of the two.
+        if (locations1[k+1] - locations1[k] >= locations2[k+1] - locations2[k]) {
+            // If the two members in the lcs are consecutive then there is no penalty.
+            lcs =  lcs + 1.0 - (float)(min(locations1[k+1] - locations1[k] - 1, max_distance)) / max_distance;
+        } else {
+            lcs = lcs + 1.0 - (float)(min(locations2[k+1] - locations2[k] - 1, max_distance)) / max_distance;
+        }
+    }
+
+    return lcs;
 }
 
 // CUDA kernel
 __global__ void lcsKernel(int* targets,
                           int* referneces,
-                          int* lcs,
+                          float* lcs,
                           const int* divide_points,
                           int* L,
                           const int size_tar,
@@ -40,7 +77,7 @@ __global__ void lcsKernel(int* targets,
 
         int subarray_size = end_idx - start_idx;
         int* reference = &referneces[start_idx];
-        lcs[tid] = CalcLcs(targets, size_tar, reference, subarray_size, L, tid, start_idx, lengthL);
+        lcs[tid] = CalcLcs(targets, size_tar, reference, subarray_size, L, tid, start_idx, lengthL, 20);
     }
 }
 
@@ -57,13 +94,13 @@ void cudaLcs(int* targets,
     
     int* d_targets;
     int* d_referneces;
-    int* d_lcs;
+    float* d_lcs;
     int* d_divide_points;
     int* d_L;
 
     // Allocate device memory
     cudaMalloc((void**)&d_referneces, sizeof(int) * size_ref);
-    cudaMalloc((void**)&d_lcs, sizeof(int) * (size_div_ref-1));
+    cudaMalloc((void**)&d_lcs, sizeof(float) * (size_div_ref-1));
     cudaMalloc((void**)&d_divide_points, sizeof(int) * size_div_ref); // We need one extra element for the last index
 
     // Copy input data from host to device
@@ -95,7 +132,7 @@ void cudaLcs(int* targets,
             printf("CUDA error: %s\n", cudaGetErrorString(err));
         }
         // Get results
-        cudaMemcpy(&lcs[i*(size_div_ref-1)], d_lcs, sizeof(int) * (size_div_ref-1), cudaMemcpyDeviceToHost);
+        cudaMemcpy(&lcs[i*(size_div_ref-1)], d_lcs, sizeof(float) * (size_div_ref-1), cudaMemcpyDeviceToHost);
 
         cudaFree(d_targets);
         cudaFree(d_L);

@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 def main():
     setup(
         name='originality',
-        version='0.0.8',
+        version='0.0.9',
         description=(
             'Calculating text originality in Python'
         ),
@@ -20,7 +20,7 @@ def main():
         url="https://github.com/MihkelLepson/originality",
         download_url="https://github.com/MihkelLepson/originality",
         author="Mihkel Lepson",
-        author_email="mihkel.lepson@gmail.com",
+        author_email="mihkel.lepson@ut.ee",
         python_requires=f">={3.9}",
         # PyPI package information.
         classifiers=[
